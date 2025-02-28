@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biology Quiz</title>
+    <style>
+        :root {
+            --primary-color: #2c7873;
+            --secondary-color: #52de97;
+            --text-color: #333;
+            --light-bg: #f7f9fc;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --correct-color: #4caf50;
+            --incorrect-color: #f44336;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .app-description {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .topic-selection {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #1a5953;
+        }
+
+        .quiz-container {
+            display: none;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background-color: #eee;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: var(--secondary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: right;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .question-card {
+            margin-bottom: 20px;
+        }
+
+        .question {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .options {
+            display: grid;
+            gap: 10px;
+        }
+
+        .option {
+            background-color: #f5f5f5;
+            padding: 12px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .option:hover {
+            background-color: #e9e9e9;
+        }
+
+        .option.selected {
+            background-color: #d4edda;
+            border: 1px solid var(--secondary-color);
+        }
+
+        .option.correct {
+            background-color: #d4edda;
+            border: 1px solid var(--correct-color);
+        }
+
+        .option.incorrect {
+            background-color: #f8d7da;
+            border: 1px solid var(--incorrect-color);
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .feedback.correct {
+            background-color: #d4edda;
+            color: var(--correct-color);
+        }
+
+        .feedback.incorrect {
+            background-color: #f8d7da;
+            color: var(--incorrect-color);
+        }
+
+        .feedback-text {
+            font-weight: bold;
+        }
+
+        .quiz-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .nav-button {
+            width: 48%;
+        }
+
+        .results {
+            display: none;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+        }
+
+        .results h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .score-detail {
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .restart-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .restart-buttons button {
+            width: 48%;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            button, select {
+                padding: 10px;
+            }
+            
+            .restart-buttons {
+                flex-direction: column;
+            }
+            
+            .restart-buttons button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Biology Quiz</h1>
+            <p class="app-description">Test your knowledge across various biology topics with interactive quizzes.</p>
+        </header>
+
+        <div class="topic-selection" id="topicSelection">
+            <h2>Select a Topic</h2>
+            <select id="topicSelect">
+                <option value="" disabled selected>Choose a biology topic</option>
+                <option value="cell-biology">Cell Biology</option>
+                <option value="genetics">Genetics</option>
+                <option value="evolution">Evolution</option>
+                <option value="human-anatomy">Human Anatomy</option>
+                <option value="ecology">Ecology</option>
+                <option value="microbiology">Microbiology</option>
+                <option value="biochemistry">Biochemistry</option>
+                <option value="plant-biology">Plant Biology</option>
+                <option value="zoology">Zoology</option>
+                <option value="immunology">Immunology</option>
+                <option value="biotechnology">Biotechnology</option>
+                <option value="marine-biology">Marine Biology</option>
+            </select>
+            <button id="startQuizBtn">Start Quiz</button>
+        </div>
+
+        <div class="quiz-container" id="quizContainer">
+            <div class="progress-bar">
+                <div class="progress" id="progressBar"></div>
+            </div>
+            <div class="progress-text" id="progressText">Question 1 of 10</div>
+            
+            <div class="question-card" id="questionCard">
+                <div class="question" id="questionText"></div>
+                <div class="options" id="optionsContainer"></div>
+                <div class="feedback" id="feedback">
+                    <span class="feedback-text" id="feedbackText"></span>
+                </div>
+            </div>
+            
+            <div class="quiz-nav">
+                <button class="nav-button" id="prevBtn" disabled>Previous</button>
+                <button class="nav-button" id="nextBtn">Next</button>
+            </div>
+        </div>
+
+        <div class="results" id="resultsContainer">
+            <h2>Quiz Results</h2>
+            <div class="score" id="scoreDisplay"></div>
+            <div class="score-detail" id="scoreDetail"></div>
+            <div class="restart-buttons">
+                <button id="restartSameTopicBtn">Restart Same Topic</button>
+                <button id="restartNewTopicBtn">Choose New Topic</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Question bank - empty arrays to be filled later
+        const questionBank = {
+            "cell-biology": [],
+            "genetics": [],
+            "evolution": [],
+            "human-anatomy": [],
+            "ecology": [],
+            "microbiology": [],
+            "biochemistry": [],
+            "plant-biology": [],
+            "zoology": [],
+            "immunology": [],
+            "biotechnology": [],
+            "marine-biology": []
+        };
+
+        // Sample questions for testing (these can be replaced later)
+        // Each topic needs at least 10 questions for the quiz to work properly
+        questionBank["cell-biology"] = [
+            {
+                question: "What is the powerhouse of the cell?",
+                options: ["Mitochondria", "Nucleus", "Ribosome", "Golgi apparatus"],
+                correctAnswer: 0,
+                explanation: "Mitochondria are known as the powerhouse of the cell because they generate most of the cell's supply of ATP, which is used as a source of chemical energy."
+            },
+            {
+                question: "Which organelle is responsible for protein synthesis?",
+                options: ["Ribosome", "Lysosome", "Nucleus", "Mitochondria"],
+                correctAnswer: 0,
+                explanation: "Ribosomes are the sites where protein synthesis occurs in the cell."
+            },
+            {
+                question: "What is the function of the cell membrane?",
+                options: ["To regulate what enters and exits the cell", "To store genetic information", "To produce energy", "To digest food particles"],
+                correctAnswer: 0,
+                explanation: "The cell membrane regulates what materials can enter or exit the cell, maintaining homeostasis."
+            },
+            {
+                question: "Which organelle contains enzymes for breaking down cellular waste?",
+                options: ["Lysosome", "Peroxisome", "Golgi apparatus", "Endoplasmic reticulum"],
+                correctAnswer: 0,
+                explanation: "Lysosomes contain digestive enzymes that break down cellular waste, debris, and damaged organelles."
+            },
+            {
+                question: "What is the site of photosynthesis in plant cells?",
+                options: ["Chloroplast", "Mitochondria", "Nucleus", "Vacuole"],
+                correctAnswer: 0,
+                explanation: "Chloroplasts are the organelles in plant cells where photosynthesis takes place."
+            },
+            {
+                question: "Which of the following is NOT part of the endomembrane system?",
+                options: ["Mitochondria", "Endoplasmic reticulum", "Golgi apparatus", "Lysosomes"],
+                correctAnswer: 0,
+                explanation: "Mitochondria have their own membranes and are not considered part of the endomembrane system."
+            },
+            {
+                question: "What is the primary function of the nucleus?",
+                options: ["To store genetic information", "To produce energy", "To synthesize proteins", "To break down waste"],
+                correctAnswer: 0,
+                explanation: "The nucleus stores genetic information in the form of DNA and controls cellular activities."
+            },
+            {
+                question: "Which cellular structure is responsible for cell division?",
+                options: ["Centrioles", "Nucleolus", "Ribosomes", "Vacuoles"],
+                correctAnswer: 0,
+                explanation: "Centrioles play a crucial role in cell division by organizing the spindle fibers that separate chromosomes."
+            },
+            {
+                question: "What is the function of the Golgi apparatus?",
+                options: ["To modify, sort, and package proteins", "To generate energy", "To store water", "To produce ribosomes"],
+                correctAnswer: 0,
+                explanation: "The Golgi apparatus receives, modifies, sorts, and packages proteins and lipids for storage in the cell or secretion."
+            },
+            {
+                question: "Which structure gives plant cells their rigid shape?",
+                options: ["Cell wall", "Cell membrane", "Cytoskeleton", "Vacuole"],
+                correctAnswer: 0,
+                explanation: "The cell wall is a rigid layer outside the cell membrane that provides structural support and protection for plant cells."
+            },
+            {
+                question: "What is the function of the smooth endoplasmic reticulum?",
+                options: ["Lipid synthesis", "Protein synthesis", "DNA replication", "ATP production"],
+                correctAnswer: 0,
+                explanation: "The smooth endoplasmic reticulum is involved in lipid synthesis, detoxification, and calcium storage."
+            },
+            {
+                question: "Which organelle is responsible for maintaining turgor pressure in plant cells?",
+                options: ["Vacuole", "Chloroplast", "Ribosome", "Nucleus"],
+                correctAnswer: 0,
+                explanation: "The central vacuole in plant cells stores water and maintains turgor pressure, which helps support the plant structure."
+            }
+        ];
+
+        // Sample questions for other topics (can be replaced later)
+        // Adding minimal questions for demonstration purposes
+        const sampleQuestion = {
+            question: "This is a sample question for this topic. Replace with real questions later.",
+            options: ["Option A", "Option B", "Option C", "Option D"],
+            correctAnswer: 0,
+            explanation: "This is a sample explanation."
+        };
+
+        // Populate each empty topic with at least 10 sample questions
+        Object.keys(questionBank).forEach(topic => {
+            if (topic !== "cell-biology" && questionBank[topic].length < 10) {
+                for (let i = 0; i < 10; i++) {
+                    questionBank[topic].push({
+                        question: `Sample question ${i+1} for ${topic}. Replace with real content.`,
+                        options: ["Option A", "Option B", "Option C", "Option D"],
+                        correctAnswer: 0,
+                        explanation: `This is a sample explanation for question ${i+1}.`
+                    });
+                }
+            }
+        });
+
+        // Quiz variables
+        let currentQuestions = [];
+        let currentTopic = "";
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let score = 0;
+
+        // DOM elements
+        const topicSelection = document.getElementById('topicSelection');
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const topicSelect = document.getElementById('topicSelect');
+        const startQuizBtn = document.getElementById('startQuizBtn');
+        const questionText = document.getElementById('questionText');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const feedback = document.getElementById('feedback');
+        const feedbackText = document.getElementById('feedbackText');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const scoreDetail = document.getElementById('scoreDetail');
+        const restartSameTopicBtn = document.getElementById('restartSameTopicBtn');
+        const restartNewTopicBtn = document.getElementById('restartNewTopicBtn');
+
+        // Event listeners
+        startQuizBtn.addEventListener('click', startQuiz);
+        prevBtn.addEventListener('click', showPreviousQuestion);
+        nextBtn.addEventListener('click', handleNextButton);
+        restartSameTopicBtn.addEventListener('click', () => restartQuiz(true));
+        restartNewTopicBtn.addEventListener('click', () => restartQuiz(false));
+
+        // Function to start the quiz
+        function startQuiz() {
+            currentTopic = topicSelect.value;
+            
+            if (!currentTopic) {
+                alert("Please select a topic to begin the quiz.");
+                return;
+            }
+            
+            // Get 10 random questions from the selected topic
+            currentQuestions = getRandomQuestions(currentTopic, 10);
+            currentQuestionIndex = 0;
+            userAnswers = Array(currentQuestions.length).fill(null);
+            score = 0;
+            
+            // Show quiz container and hide topic selection
+            topicSelection.style.display = 'none';
+            quizContainer.style.display = 'block';
+            resultsContainer.style.display = 'none';
+            
+            // Show first question
+            showQuestion(0);
+            updateProgressBar();
+        }
+
+        // Function to get random questions from a topic
+        function getRandomQuestions(topic, count) {
+            const topicQuestions = questionBank[topic];
+            
+            // Shuffle the array
+            const shuffled = [...topicQuestions].sort(() => 0.5 - Math.random());
+            
+            // Return the first 'count' elements
+            return shuffled.slice(0, count);
+        }
+
+        // Function to display the current question
+        function showQuestion(index) {
+            const question = currentQuestions[index];
+            questionText.textContent = `${index + 1}. ${question.question}`;
+            
+            // Clear previous options
+            optionsContainer.innerHTML = '';
+            
+            // Create new option elements
+            question.options.forEach((option, i) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                
+                // Add selected class if this option was previously selected
+                if (userAnswers[index] === i) {
+                    optionElement.classList.add('selected');
+                }
+                
+                optionElement.textContent = option;
+                optionElement.dataset.index = i;
+                
+                optionElement.addEventListener('click', () => selectOption(i));
+                
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            // Update progress text
+            progressText.textContent = `Question ${index + 1} of ${currentQuestions.length}`;
+            
+            // Update button states
+            prevBtn.disabled = index === 0;
+            
+            if (index === currentQuestions.length - 1) {
+                nextBtn.textContent = 'Finish Quiz';
+            } else {
+                nextBtn.textContent = 'Next';
+            }
+            
+            // Hide feedback
+            feedback.style.display = 'none';
+        }
+
+        // Function to select an option
+        function selectOption(optionIndex) {
+            userAnswers[currentQuestionIndex] = optionIndex;
+            
+            // Update UI to show selected option
+            const options = document.querySelectorAll('.option');
+            options.forEach((option, i) => {
+                if (i === optionIndex) {
+                    option.classList.add('selected');
+                } else {
+                    option.classList.remove('selected');
+                }
+            });
+            
+            // Show feedback
+            const question = currentQuestions[currentQuestionIndex];
+            feedback.style.display = 'block';
+            
+            if (optionIndex === question.correctAnswer) {
+                feedback.className = 'feedback correct';
+                feedbackText.textContent = 'Correct! ' + question.explanation;
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedbackText.textContent = 'Incorrect. ' + question.explanation;
+            }
+        }
+
+        // Function to handle next button click
+        function handleNextButton() {
+            if (currentQuestionIndex === currentQuestions.length - 1) {
+                finishQuiz();
+            } else {
+                currentQuestionIndex++;
+                showQuestion(currentQuestionIndex);
+                updateProgressBar();
+            }
+        }
+
+        // Function to show previous question
+        function showPreviousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                showQuestion(currentQuestionIndex);
+                updateProgressBar();
+            }
+        }
+
+        // Function to update progress bar
+        function updateProgressBar() {
+            const progress = ((currentQuestionIndex + 1) / currentQuestions.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        // Function to finish the quiz and show results
+        function finishQuiz() {
+            // Calculate score
+            score = 0;
+            userAnswers.forEach((answer, index) => {
+                if (answer === currentQuestions[index].correctAnswer) {
+                    score++;
+                }
+            });
+            
+            // Show results
+            quizContainer.style.display = 'none';
+            resultsContainer.style.display = 'block';
+            
+            // Update score display
+            const percentage = ((score / currentQuestions.length) * 100).toFixed(0);
+            scoreDisplay.textContent = `${score} / ${currentQuestions.length} (${percentage}%)`;
+            
+            // Provide feedback based on score
+            let feedback;
+            if (percentage >= 90) {
+                feedback = "Excellent! You have a strong understanding of this topic.";
+            } else if (percentage >= 70) {
+                feedback = "Good job! You have a solid grasp of the material.";
+            } else if (percentage >= 50) {
+                feedback = "Not bad! With some review, you'll improve your knowledge.";
+            } else {
+                feedback = "You might need more study in this area. Keep practicing!";
+            }
+            
+            scoreDetail.textContent = feedback;
+        }
+
+        // Function to restart the quiz
+        function restartQuiz(sameTopic) {
+            if (sameTopic) {
+                // Restart with same topic
+                startQuiz();
+            } else {
+                // Go back to topic selection
+                topicSelection.style.display = 'block';
+                quizContainer.style.display = 'none';
+                resultsContainer.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
